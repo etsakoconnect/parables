@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Global Live Entries - A to Z</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+    body { background: #f4f6f8; padding: 20px; max-width: 1100px; margin: auto; }
+    h2 { margin-bottom: 15px; color: #111; }
+    .nav-link { display: inline-block; margin-bottom: 20px; color: #007bff; text-decoration: none; font-weight: bold; }
+    
+    .letter-header {
+      background: #111;
+      color: #fff;
+      padding: 10px 16px;
+      font-size: 20px;
+      font-weight: bold;
+      border-radius: 6px 6px 0 0;
+      margin-top: 25px;
+    }
+    
+    .table-container { background: #fff; border-radius: 0 0 8px 8px; overflow-x: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 20px; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th, td { padding: 12px 15px; border-bottom: 1px solid #ddd; font-size: 14px; }
+    th { background: #28a745; color: #fff; }
+    tr:nth-child(even) { background: #f9f9f9; }
+    .sno { font-weight: bold; color: #555; width: 50px; text-align: center; }
+  </style>
+</head>
+<body>
+
+<!-- Navigation link updated to speech.html -->
+<a href="speech.html" class="nav-link">← Add New Entry</a>
+<h2>🌍 Live Etsako Dictionary Entries (A – Z Index)</h2>
+
+<div id="boardContainer">
+  <p style="text-align: center; font-weight: bold; margin-top: 30px;">Loading global entries...</p>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+ const firebaseConfig = {
+  apiKey: "AIzaSyBxqwCHdPXVCVCp0I087ryj_rLliFCAiVo",
+  authDomain: "etsakoconnect.firebaseapp.com",
+  projectId: "etsakoconnect",
+  storageBucket: "etsakoconnect.firebasestorage.app",
+  messagingSenderId: "513216894133",
+  appId: "1:513216894133:web:386b7f1dd16a98f3ee5afc",
+  measurementId: "G-RS06JNETTB"
+};
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  const container = document.getElementById('boardContainer');
+  const entriesRef = ref(db, 'dictionary_entries');
+
+  onValue(entriesRef, (snapshot) => {
+    container.innerHTML = '';
+    const data = snapshot.val();
+
+    if (!data) {
+      container.innerHTML = '<p style="text-align:center;">No entries submitted yet.</p>';
+      return;
+    }
+
+    const entries = Object.values(data);
+    const grouped = {};
+    const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+
+    alphabet.forEach(letter => grouped[letter] = []);
+
+    entries.forEach(entry => {
+      if (entry.english) {
+        const firstChar = entry.english.trim().charAt(0).toUpperCase();
+        if (grouped[firstChar]) {
+          grouped[firstChar].push(entry);
+        } else {
+          if (!grouped['#']) grouped['#'] = [];
+          grouped['#'].push(entry);
+        }
+      }
+    });
+
+    Object.keys(grouped).forEach(letter => {
+      grouped[letter].sort((a, b) => a.english.localeCompare(b.english));
+    });
+
+    let totalRendered = 0;
+
+    Object.keys(grouped).forEach(letter => {
+      const items = grouped[letter];
+      if (items.length > 0) {
+        totalRendered += items.length;
+
+        let tableRows = items.map((entry, index) => `
+          <tr>
+            <td class="sno">${index + 1}</td>
+            <td><strong>${entry.english}</strong></td>
+            <td>${entry.etsako}</td>
+            <td>${entry.singular || '-'}</td>
+            <td>${entry.plural || '-'}</td>
+            <td>${entry.dialect || '-'}</td>
+            <td>${entry.partOfSpeech}</td>
+          </tr>
+        `).join('');
+
+        const sectionHTML = `
+          <div class="letter-header">Letter ${letter}</div>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th class="sno">S/N</th>
+                  <th>English</th>
+                  <th>Etsako</th>
+                  <th>Singular</th>
+                  <th>Plural</th>
+                  <th>Dialect/Region</th>
+                  <th>Part of Speech</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${tableRows}
+              </tbody>
+            </table>
+          </div>
+        `;
+        container.innerHTML += sectionHTML;
+      }
+    });
+
+    if (totalRendered === 0) {
+      container.innerHTML = '<p style="text-align:center;">No valid entries found.</p>';
+    }
+  });
+</script>
+
+</body>
+</html>

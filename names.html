@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Submit Etsako Name</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    body {
+      background-color: #f4f5f7;
+      display: flex;
+      justify-content: center;
+      padding: 20px;
+      margin: 0;
+    }
+    .container {
+      width: 100%;
+      max-width: 480px;
+    }
+    .top-btn {
+      width: 100%;
+      background-color: #27a745;
+      color: white;
+      border: none;
+      padding: 14px;
+      font-size: 18px;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-bottom: 20px;
+    }
+    .card {
+      background: white;
+      border-radius: 8px;
+      padding: 24px;
+      border: 1px solid #e1e4e8;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    }
+    h2 {
+      margin-top: 0;
+      margin-bottom: 18px;
+      font-size: 24px;
+      color: #111;
+    }
+    .form-group {
+      margin-bottom: 16px;
+    }
+    label {
+      display: block;
+      font-weight: 600;
+      font-size: 15px;
+      margin-bottom: 8px;
+      color: #222;
+    }
+    input[type="text"], select, textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #d1d5da;
+      border-radius: 6px;
+      font-size: 15px;
+      color: #333;
+      background-color: #fff;
+    }
+    select {
+      background-color: #f6f8fa;
+      appearance: auto;
+    }
+    textarea {
+      resize: vertical;
+      min-height: 90px;
+    }
+    .submit-btn {
+      width: 100%;
+      background-color: #27a745;
+      color: white;
+      border: none;
+      padding: 14px;
+      font-size: 18px;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+    .nav-link {
+      display: block;
+      text-align: center;
+      margin-top: 15px;
+      color: #0366d6;
+      text-decoration: none;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <button class="top-btn" onclick="alert('Parable page feature')">Publish Parable</button>
+
+    <div class="card">
+      <h2>Submit an Etsako Name</h2>
+      <form id="nameForm">
+        <div class="form-group">
+          <label for="etsakoName">Etsako Name:</label>
+          <input type="text" id="etsakoName" placeholder="e.g., Oshiomhole" required>
+        </div>
+
+        <div class="form-group">
+          <label for="gender">Gender:</label>
+          <select id="gender" required>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Unisex">Unisex</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="meaning">Meaning:</label>
+          <textarea id="meaning" placeholder="Enter the meaning..." required></textarea>
+        </div>
+
+        <button type="submit" class="submit-btn">Upload Name</button>
+      </form>
+      
+      <a href="board.html" class="nav-link">🌍 View All Global Entries &rarr;</a>
+    </div>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+  <script>
+const firebaseConfig = {
+  apiKey: "AIzaSyAwR1rsyZixEqOHm0ujhBzl74lzPqpdNEM",
+  authDomain: "etsako-names.firebaseapp.com",
+  projectId: "etsako-names",
+  storageBucket: "etsako-names.firebasestorage.app",
+  messagingSenderId: "620551420203",
+  appId: "1:620551420203:web:6c8fb069dbc150fc0d6d6e",
+  measurementId: "G-ZSVPKQQW0K"
+};
+
+
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    document.getElementById('nameForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const name = document.getElementById('etsakoName').value;
+      const gender = document.getElementById('gender').value;
+      const meaning = document.getElementById('meaning').value;
+
+      database.ref('etsako_names').push({
+        name: name,
+        gender: gender,
+        meaning: meaning,
+        timestamp: Date.now()
+      }).then(() => {
+        alert("Name submitted successfully!");
+        document.getElementById('nameForm').reset();
+      }).catch((error) => {
+        alert("Error submitting entry: " + error.message);
+      });
+    });
+  </script>
+</body>
+</html>

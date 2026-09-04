@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Etsako Names Directory</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    body {
+      background-color: #f4f5f7;
+      padding: 20px;
+      margin: 0;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    h2 {
+      margin: 0;
+      color: #111;
+    }
+    .back-btn {
+      background-color: #27a745;
+      color: white;
+      text-decoration: none;
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-weight: 600;
+    }
+    .section-title {
+      font-size: 20px;
+      margin-top: 30px;
+      margin-bottom: 15px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #27a745;
+      color: #1b5e20;
+    }
+    .table-card {
+      background: white;
+      border-radius: 8px;
+      border: 1px solid #e1e4e8;
+      overflow: hidden;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+      margin-bottom: 30px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+    th, td {
+      padding: 12px 16px;
+      border-bottom: 1px solid #e1e4e8;
+    }
+    th {
+      background-color: #f8f9fa;
+      font-weight: 600;
+      color: #444;
+    }
+    .alphabet-header {
+      background-color: #e8f5e9;
+      color: #2e7d32;
+      font-weight: bold;
+      font-size: 16px;
+      padding: 10px 16px;
+    }
+    tr:last-child td {
+      border-bottom: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header">
+      <h2>🌍 Global Etsako Names Directory</h2>
+      <a href="names.html" class="back-btn">+ Submit New</a>
+    </div>
+
+    <!-- MALE NAMES TABLE -->
+    <div class="section-title">👨 Male Names Directory (A – Z)</div>
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Meaning</th>
+          </tr>
+        </thead>
+        <tbody id="maleTable">
+          <tr>
+            <td colspan="3" style="text-align: center; color: #666;">Loading Male Entries...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- FEMALE NAMES TABLE -->
+    <div class="section-title">👩 Female Names Directory (A – Z)</div>
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Meaning</th>
+          </tr>
+        </thead>
+        <tbody id="femaleTable">
+          <tr>
+            <td colspan="3" style="text-align: center; color: #666;">Loading Female Entries...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+  <script>
+const firebaseConfig = {
+  apiKey: "AIzaSyAwR1rsyZixEqOHm0ujhBzl74lzPqpdNEM",
+  authDomain: "etsako-names.firebaseapp.com",
+  projectId: "etsako-names",
+  storageBucket: "etsako-names.firebasestorage.app",
+  messagingSenderId: "620551420203",
+  appId: "1:620551420203:web:6c8fb069dbc150fc0d6d6e",
+  measurementId: "G-ZSVPKQQW0K"
+};
+
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    database.ref('etsako_names').on('value', (snapshot) => {
+      const maleTable = document.getElementById('maleTable');
+      const femaleTable = document.getElementById('femaleTable');
+      
+      maleTable.innerHTML = '';
+      femaleTable.innerHTML = '';
+
+      if (!snapshot.exists()) {
+        const noDataMsg = '<tr><td colspan="3" style="text-align: center;">No entries found.</td></tr>';
+        maleTable.innerHTML = noDataMsg;
+        femaleTable.innerHTML = noDataMsg;
+        return;
+      }
+
+      const maleEntries = [];
+      const femaleEntries = [];
+
+      snapshot.forEach((child) => {
+        const item = child.val();
+        if (item.gender === 'Female') {
+          femaleEntries.push(item);
+        } else {
+          maleEntries.push(item);
+        }
+      });
+
+      renderAlphabeticalTable(maleEntries, maleTable);
+      renderAlphabeticalTable(femaleEntries, femaleTable);
+    });
+
+    function renderAlphabeticalTable(entries, tableBody) {
+      if (entries.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="3" style="text-align: center;">No entries found.</td></tr>';
+        return;
+      }
+
+      entries.sort((a, b) => a.name.localeCompare(b.name, 'en', { sensitivity: 'base' }));
+
+      const grouped = {};
+      entries.forEach(item => {
+        const firstLetter = item.name.trim().charAt(0).toUpperCase();
+        const letterKey = /[A-Z]/.test(firstLetter) ? firstLetter : '#';
+        if (!grouped[letterKey]) {
+          grouped[letterKey] = [];
+        }
+        grouped[letterKey].push(item);
+      });
+
+      let globalIndex = 1;
+
+      Object.keys(grouped).sort().forEach(letter => {
+        const letterRow = document.createElement('tr');
+        letterRow.innerHTML = `<td colspan="3" class="alphabet-header">Column ${letter}</td>`;
+        tableBody.appendChild(letterRow);
+
+        grouped[letter].forEach(item => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td><strong>${globalIndex++}</strong></td>
+            <td><strong>${escapeHtml(item.name)}</strong></td>
+            <td>${escapeHtml(item.meaning)}</td>
+          `;
+          tableBody.appendChild(row);
+        });
+      });
+    }
+
+    function escapeHtml(text) {
+      return String(text).replace(/[&<>"']/g, function(m) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+      });
+    }
+  </script>
+</body>
+</html>

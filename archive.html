@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Global Etsako Parables Archive 🌍</title>
+  <style>
+    * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+    body { background-color: #f4f6f8; padding: 24px; margin: 0; }
+    .container { max-width: 800px; margin: 0 auto; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    h1 { font-size: 24px; color: #1a1a1a; margin: 0; }
+    .btn-add { background-color: #27ae60; color: white; padding: 10px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 14px; }
+    .card { background: white; border-radius: 8px; padding: 16px 20px; margin-bottom: 16px; border: 1px solid #e1e4e8; box-shadow: 0 2px 4px rgba(0,0,0,0.04); display: flex; gap: 16px; align-items: flex-start; }
+    .serial-number { background-color: #e8f5e9; color: #27ae60; font-weight: 700; font-size: 16px; border-radius: 50%; min-width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border: 1px solid #c8e6c9; }
+    .content { flex-grow: 1; }
+    .parable-title { font-weight: 700; color: #1a1a1a; font-size: 16px; margin-bottom: 6px; }
+    .meaning-text { color: #555; font-size: 15px; line-height: 1.4; }
+    .empty-msg { text-align: center; color: #777; margin-top: 40px; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>Global Parables Archive 🌍</h1>
+    <a href="parable.html" class="btn-add">+ Submit New</a>
+  </div>
+
+  <div id="parableList">
+    <div class="empty-msg">Loading entries...</div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBxqwCHdPXVCVCp0I087ryj_rLliFCAiVo",
+  authDomain: "etsakoconnect.firebaseapp.com",
+  projectId: "etsakoconnect",
+  storageBucket: "etsakoconnect.firebasestorage.app",
+  messagingSenderId: "513216894133",
+  appId: "1:513216894133:web:386b7f1dd16a98f3ee5afc",
+  measurementId: "G-RS06JNETTB"
+};
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  const parableListEl = document.getElementById("parableList");
+
+  onValue(ref(db, "parables"), (snapshot) => {
+    parableListEl.innerHTML = "";
+    const data = snapshot.val();
+
+    if (data) {
+      const entries = Object.values(data);
+      entries.forEach((item, index) => {
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+          <div class="serial-number">#${index + 1}</div>
+          <div class="content">
+            <div class="parable-title">${escapeHtml(item.parable)}</div>
+            <div class="meaning-text">${escapeHtml(item.meaning)}</div>
+          </div>
+        `;
+        parableListEl.appendChild(card);
+      });
+    } else {
+      parableListEl.innerHTML = `<div class="empty-msg">No parables submitted yet. Be the first!</div>`;
+    }
+  });
+
+  function escapeHtml(text) {
+    return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+</script>
+
+</body>
+</html>
