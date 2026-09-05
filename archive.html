@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Global Etsako Parables Archive 🌍</title>
+  <title>Global Etsako Parables Notice Board 🌍</title>
   <style>
     * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
     body { background-color: #f4f6f8; padding: 24px; margin: 0; }
@@ -12,14 +12,17 @@
     h1 { font-size: 24px; color: #1a1a1a; margin: 0; }
     .btn-add { background-color: #27ae60; color: white; padding: 10px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 14px; }
     
-    .table-container { background: white; border-radius: 8px; border: 1px solid #e1e4e8; box-shadow: 0 2px 4px rgba(0,0,0,0.04); overflow-x: auto; }
+    .alphabet-block { margin-bottom: 32px; }
+    .column-header { background-color: #27ae60; color: white; font-size: 18px; font-weight: 700; padding: 8px 16px; border-radius: 6px 6px 0 0; display: inline-block; }
+    
+    .table-container { background: white; border-radius: 0 8px 8px 8px; border: 1px solid #e1e4e8; box-shadow: 0 2px 4px rgba(0,0,0,0.04); overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; text-align: left; }
-    th, td { padding: 14px 16px; border-bottom: 1px solid #e1e4e8; font-size: 15px; }
+    th, td { padding: 12px 16px; border-bottom: 1px solid #e1e4e8; font-size: 15px; }
     th { background-color: #f8f9fa; color: #333; font-weight: 700; }
     tr:last-child td { border-bottom: none; }
     tr:hover { background-color: #f1f8f3; }
     
-    .serial-col { width: 70px; text-align: center; font-weight: 700; color: #27ae60; }
+    .serial-col { width: 60px; text-align: center; font-weight: 700; color: #27ae60; }
     .parable-col { font-weight: 600; color: #1a1a1a; min-width: 220px; }
     .meaning-col { color: #555; line-height: 1.4; }
     .empty-msg { text-align: center; padding: 30px; color: #777; }
@@ -29,25 +32,12 @@
 
 <div class="container">
   <div class="header">
-    <h1>Global Parables Table 🌍</h1>
+    <h1>Etsako Parables Notice Board 🌍</h1>
     <a href="parable.html" class="btn-add">+ Submit New</a>
   </div>
 
-  <div class="table-container">
-    <table>
-      <thead>
-        <tr>
-          <th class="serial-col">S/N</th>
-          <th>Etsako Parable</th>
-          <th>English Meaning</th>
-        </tr>
-      </thead>
-      <tbody id="parableTableBody">
-        <tr>
-          <td colspan="3" class="empty-msg">Loading entries...</td>
-        </tr>
-      </tbody>
-    </table>
+  <div id="noticeBoard">
+    <div class="empty-msg">Loading entries...</div>
   </div>
 </div>
 
@@ -65,36 +55,94 @@
   measurementId: "G-RS06JNETTB"
 };
 
-
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
 
-  const tableBody = document.getElementById("parableTableBody");
+  const boardEl = document.getElementById("noticeBoard");
 
   onValue(ref(db, "parables"), (snapshot) => {
-    tableBody.innerHTML = "";
+    boardEl.innerHTML = "";
     const data = snapshot.val();
 
     if (!data) {
-      tableBody.innerHTML = `<tr><td colspan="3" class="empty-msg">No parables submitted yet. Be the first!</td></tr>`;
+      boardEl.innerHTML = `<div class="empty-msg">No parables submitted yet. Be the first!</div>`;
       return;
     }
 
-    const entries = Object.values(data);
+    // Initialize letter buckets A-Z
+    const alphabetMap = {};
+    for (let i = 65; i <= 90; i++) {
+      alphabetMap[String.fromCharCode(i)] = [];
+    }
+    alphabetMap["#"] = []; // Fallback for special characters or numbers
 
-    // Sort alphabetically by the Etsako parable text (A-Z)
-    entries.sort((a, b) => a.parable.trim().localeCompare(b.parable.trim(), undefined, { sensitivity: 'base' }));
-
-    // Render serial table rows
-    entries.forEach((item, index) => {
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td class="serial-col">${index + 1}</td>
-        <td class="parable-col">${escapeHtml(item.parable)}</td>
-        <td class="meaning-col">${escapeHtml(item.meaning)}</td>
-      `;
-      tableBody.appendChild(row);
+    // Categorize entries by initial letter
+    Object.values(data).forEach((item) => {
+      const firstChar = item.parable.trim().charAt(0).toUpperCase();
+      if (alphabetMap[firstChar]) {
+        alphabetMap[firstChar].push(item);
+      } else {
+        alphabetMap["#"].push(item);
+      }
     });
+
+    let hasEntries = false;
+
+    // Render a table block for each active letter column
+    Object.keys(alphabetMap).forEach((letter) => {
+      const group = alphabetMap[letter];
+
+      if (group.length > 0) {
+        hasEntries = true;
+
+        // Sort items inside the same letter column
+        group.sort((a, b) => a.parable.trim().localeCompare(b.parable.trim(), undefined, { sensitivity: 'base' }));
+
+        const block = document.createElement("div");
+        block.className = "alphabet-block";
+
+        const letterHeader = document.createElement("div");
+        letterHeader.className = "column-header";
+        letterHeader.textContent = `Column ${letter}`;
+        block.appendChild(letterHeader);
+
+        const tableContainer = document.createElement("div");
+        tableContainer.className = "table-container";
+
+        let tableRowsHtml = "";
+        group.forEach((item, index) => {
+          tableRowsHtml += `
+            <tr>
+              <td class="serial-col">${index + 1}</td>
+              <td class="parable-col">${escapeHtml(item.parable)}</td>
+              <td class="meaning-col">${escapeHtml(item.meaning)}</td>
+            </tr>
+          `;
+        });
+
+        tableContainer.innerHTML = `
+          <table>
+            <thead>
+              <tr>
+                <th class="serial-col">S/N</th>
+                <th>Etsako Parable</th>
+                <th>English Meaning</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${tableRowsHtml}
+            </tbody>
+          </table>
+        `;
+
+        block.appendChild(tableContainer);
+        boardEl.appendChild(block);
+      }
+    });
+
+    if (!hasEntries) {
+      boardEl.innerHTML = `<div class="empty-msg">No parables submitted yet. Be the first!</div>`;
+    }
   });
 
   function escapeHtml(text) {
