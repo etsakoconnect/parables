@@ -1,1 +1,88 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Etsako Parables Archive - Submit</title>
+  <style>
+    * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+    body { background-color: #f4f6f8; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 16px; }
+    .card { background: #ffffff; padding: 24px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); width: 100%; max-width: 480px; border: 1px solid #e1e4e8; }
+    h2 { margin: 0 0 6px 0; color: #1a1a1a; font-size: 22px; }
+    .subtitle { color: #666; font-size: 14px; margin-bottom: 20px; }
+    .form-group { margin-bottom: 16px; }
+    label { display: block; font-weight: 600; font-size: 14px; margin-bottom: 6px; color: #333; }
+    textarea { width: 100%; height: 80px; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; resize: vertical; }
+    textarea:focus { outline: none; border-color: #27ae60; }
+    .actions { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
+    .btn-submit { background-color: #27ae60; color: white; border: none; padding: 12px; border-radius: 6px; font-size: 16px; font-weight: 600; cursor: pointer; width: 100%; }
+    .btn-submit:hover { background-color: #219150; }
+    .btn-cancel { background: none; border: none; color: #0066cc; font-size: 14px; cursor: pointer; align-self: flex-start; text-decoration: none; }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <h2>Etsako Parables Archive</h2>
+  <div class="subtitle">Contribute a parable to the global database</div>
+
+  <form id="parableForm">
+    <div class="form-group">
+      <label for="parable">Etsako Parable:</label>
+      <textarea id="parable" placeholder="Enter the parable in Etsako dialect..." required></textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="meaning">English Meaning:</label>
+      <textarea id="meaning" placeholder="Enter the English translation/meaning..." required></textarea>
+    </div>
+
+    <a href="archive.html" class="btn-cancel">Cancel</a>
+
+    <div class="actions">
+      <button type="submit" class="btn-submit">Publish Parable</button>
+    </div>
+  </form>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getDatabase, ref, push, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+  const firebaseConfig = {
+  apiKey: "AIzaSyBxqwCHdPXVCVCp0I087ryj_rLliFCAiVo",
+  authDomain: "etsakoconnect.firebaseapp.com",
+  projectId: "etsakoconnect",
+  storageBucket: "etsakoconnect.firebasestorage.app",
+  messagingSenderId: "513216894133",
+  appId: "1:513216894133:web:386b7f1dd16a98f3ee5afc",
+  measurementId: "G-RS06JNETTB"
+};
+
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  document.getElementById("parableForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const parableText = document.getElementById("parable").value.trim();
+    const meaningText = document.getElementById("meaning").value.trim();
+
+    if (parableText && meaningText) {
+      try {
+        await push(ref(db, "parables"), {
+          parable: parableText,
+          meaning: meaningText,
+          timestamp: serverTimestamp()
+        });
+        window.location.href = "archive.html";
+      } catch (err) {
+        alert("Submission failed. Please check your network connection.");
+      }
+    }
+  });
+</script>
+
+</body>
+</html>
